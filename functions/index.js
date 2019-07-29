@@ -20,6 +20,7 @@ firebase.initializeApp(firebaseConfig);
 const db = admin.firestore();
 const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+// Get workshops
 app.get('/workshops', (req, res) => {
   db
     .collection('workshops')
@@ -36,14 +37,38 @@ app.get('/workshops', (req, res) => {
         });
       });
       return res.json(workshops);
-    })
-    .catch(err => console.error(err));
+    });
+  // .catch(err => console.error(err));
 });
 
-app.post('/workshop', (req, res) => {
+const FBAuth = (req, res, next) => {
+  let idToken;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    [, idToken] = req.headers.authorization.split('Bearer ');
+  } else {
+    // console.error('No token found');
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  admin.auth().verifyIdToken(idToken)
+    .then((decodedToken) => {
+      req.user = decodedToken;
+      return db.collection('users').where('userId', '==', req.user.uid)
+        .limit(1).get();
+    })
+    .then((data) => {
+      req.user.email = data.docs[0].data().email;
+      return next();
+    })
+    .catch(err => res.status(403).json(err));
+};
+
+// Create a workshop
+app.post('/workshop', FBAuth, (req, res) => {
   const newWorkshop = {
     title: req.body.title,
     department: req.body.department,
+    // email: req.user.email,
     createdAt: new Date().toISOString(),
   };
 
@@ -57,12 +82,11 @@ app.post('/workshop', (req, res) => {
     });
 });
 
-// Signup route
-//  console.log(firebase);
-
+// Validation functions
 const isEmpty = str => !str.trim();
 const isEmail = email => email.match(emailRegEx);
 
+//  Signup route
 app.post('/signup', (req, res) => {
   const newUser = {
     email: req.body.email,
@@ -110,12 +134,10 @@ app.post('/signup', (req, res) => {
       return db.doc(`/users/${newUser.email}`).set(userCredential);
     })
     .then(() => res.status(201).json({ token }))
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err.code });
-    });
+    .catch(err => res.status(500).json({ error: err.code }));
 });
 
+// Login route
 app.post('/login', (req, res) => {
   const user = {
     email: req.body.email,
@@ -132,7 +154,7 @@ app.post('/login', (req, res) => {
     .then(data => data.user.getIdToken())
     .then(token => res.json({ token }))
     .catch((err) => {
-      console.error(err);
+      // console.error(err);
       if (err.code === 'auth/wrong-password') {
         return res.status(403).json({ general: 'Wrong credentials, please try again' });
       }
