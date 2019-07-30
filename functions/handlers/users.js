@@ -85,6 +85,10 @@ exports.uploadAbstract = (req, res) => {
 
 
   busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    // Napravi validator za ms word
+    if (mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Wrong file type submitted' });
+    }
     const abstractExtension = filename.split('.').slice(-1)[0];
 
     abstractFileName = `${Math.round(Math.random() * 100000000000)}.${abstractExtension}`;
