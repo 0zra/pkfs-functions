@@ -85,17 +85,13 @@ exports.uploadAbstract = (req, res) => {
 
 
   busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    console.log(fieldname);
-    console.log(filename);
-    console.log(mimetype);
-
     const abstractExtension = filename.split('.').slice(-1)[0];
 
     abstractFileName = `${Math.round(Math.random() * 100000000000)}.${abstractExtension}`;
     const filepath = path.join(os.tmpdir(), abstractFileName);
 
     abstractToBeUploaded = { filepath, mimetype };
-    file.pipe(fs.createReadStream(filepath));
+    file.pipe(fs.createWriteStream(filepath));
   });
   busboy.on('finish', () => {
     admin.storage().bucket().upload(abstractToBeUploaded.filepath, {
@@ -108,7 +104,8 @@ exports.uploadAbstract = (req, res) => {
         const abstractUrl = `https"//firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${abstractFileName}?alt=media`;
         return db.doc(`/users/${req.user.email}`).update({ abstractUrl });
       })
-      .then(() => res.json({ message: 'Image uploaded successfully' }))
+      .then(() => res.json({ message: 'Abstract uploaded successfully' }))
       .catch(err => res.status(500).json({ error: err.code }));
   });
+  busboy.end(req.rawBody);
 };
