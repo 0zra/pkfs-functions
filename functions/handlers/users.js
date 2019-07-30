@@ -1,6 +1,10 @@
 const firebase = require('firebase');
+const BusBoy = require('busboy');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 
-const { db } = require('../utils/admin');
+const { admin, db } = require('../utils/admin');
 const config = require('../utils/config');
 
 const { validateSignupData, validateLoginData } = require('../utils/validators');
@@ -15,11 +19,14 @@ exports.signup = (req, res) => {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     department: req.body.department,
+    // imageUrl: `https"//firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
     year: req.body.year,
   };
 
   const { valid, errors } = validateSignupData(newUser);
   if (!valid) return res.status(403).json(errors);
+
+  // const noImg = 'no-img.png';
 
   let token; let
     userId;
@@ -68,4 +75,40 @@ exports.login = (req, res) => {
       return res.status(500).json({ error: err.code });
     });
   return null;
+};
+
+exports.uploadAbstract = (req, res) => {
+  const busboy = new BusBoy({ headers: req.headers });
+
+  let abstractFileName;
+  let abstractToBeUploaded = {};
+
+
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    console.log(fieldname);
+    console.log(filename);
+    console.log(mimetype);
+
+    const abstractExtension = filename.split('.').slice(-1)[0];
+
+    abstractFileName = `${Math.round(Math.random() * 100000000000)}.${abstractExtension}`;
+    const filepath = path.join(os.tmpdir(), abstractFileName);
+
+    abstractToBeUploaded = { filepath, mimetype };
+    file.pipe(fs.createReadStream(filepath));
+  });
+  busboy.on('finish', () => {
+    admin.storage().bucket().upload(abstractToBeUploaded.filepath, {
+      resumable: false,
+      metadata: {
+        contentType: abstractToBeUploaded.mimetype,
+      },
+    })
+      .then(() => {
+        const abstractUrl = `https"//firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${abstractFileName}?alt=media`;
+        return db.doc(`/users/${req.user.email}`).update({ abstractUrl });
+      })
+      .then(() => res.json({ message: 'Image uploaded successfully' }))
+      .catch(err => res.status(500).json({ error: err.code }));
+  });
 };
