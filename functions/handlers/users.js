@@ -76,12 +76,31 @@ exports.login = (req, res) => {
     });
   return null;
 };
+// Get own user details
+exports.getAuthenticatedUser = (req, res) => {
+  const userData = {};
+  db.doc(`/users/${req.user.email}`).get()
+    .then((doc) => {
+      if (doc.exists) {
+        userData.credentials = doc.data();
+        return db.collection('applications').where('email', '==', req.user.email).get();
+      }
+    })
+    .then((data) => {
+      userData.applications = [];
+      data.forEach(
+        (doc) => { userData.applications.push(doc.data()); },
+      );
+      return res.json(userData);
+    })
+    .catch(err => res.status(500).json({ error: err.code }));
+};
 
 // Add user details, vid no. 9.
 exports.addUserDetails = (req, res) => {
   const userDetails = reduceUserDetails(req.body);
 
-  db.doc(`/users/${req.user.handle}`).update(userDetails)
+  db.doc(`/users/${req.user.email}`).update(userDetails)
     .then(() => res.json({ message: 'Details added successfully' }))
     .catch(err => res.status(500).json({ error: err.code }));
 };
