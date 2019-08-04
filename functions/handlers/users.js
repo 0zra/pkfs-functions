@@ -7,7 +7,7 @@ const fs = require('fs');
 const { admin, db } = require('../utils/admin');
 const config = require('../utils/config');
 
-const { validateSignupData, validateLoginData } = require('../utils/validators');
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../utils/validators');
 
 firebase.initializeApp(config);
 
@@ -75,6 +75,15 @@ exports.login = (req, res) => {
       return res.status(500).json({ error: err.code });
     });
   return null;
+};
+
+// Add user details, vid no. 9.
+exports.addUserDetails = (req, res) => {
+  const userDetails = reduceUserDetails(req.body);
+
+  db.doc(`/users/${req.user.handle}`).update(userDetails)
+    .then(() => res.json({ message: 'Details added successfully' }))
+    .catch(err => res.status(500).json({ error: err.code }));
 };
 
 exports.uploadAbstract = (req, res) => {

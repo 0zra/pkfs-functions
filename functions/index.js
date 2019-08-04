@@ -3,7 +3,12 @@ const app = require('express')();
 const FBAuth = require('./utils/fbAuth');
 
 const { getAllWorkshops, postOneWorkshop } = require('./handlers/workshops');
-const { signup, login, uploadAbstract } = require('./handlers/users');
+const {
+  signup,
+  login,
+  uploadAbstract,
+  addUserDetails,
+} = require('./handlers/users');
 
 // Workshop routes
 app.get('/workshops', getAllWorkshops);
@@ -13,5 +18,6 @@ app.post('/workshop', FBAuth, postOneWorkshop);
 app.post('/signup', signup);
 app.post('/login', login);
 app.post('/user/abstract', FBAuth, uploadAbstract);
+app.post('/user', FBAuth, addUserDetails);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
