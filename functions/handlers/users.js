@@ -43,8 +43,14 @@ exports.signup = (req, res) => {
     })
     .then((responseToken) => {
       token = responseToken;
+      const {
+        firstName, lastName, department, year, email,
+      } = newUser;
       const userCredential = {
-        email: newUser.email,
+        firstName,
+        lastName,
+        email,
+        code: department + year,
         createdAt: new Date().toISOString(),
         userId,
       };
@@ -109,6 +115,7 @@ exports.getUserDetails = (req, res) => {
 // Get own user details
 exports.getAuthenticatedUser = (req, res) => {
   const userData = {};
+  console.log(req.user);
   db.doc(`/users/${req.user.email}`).get()
     .then((doc) => {
       if (doc.exists) {
@@ -180,7 +187,7 @@ exports.uploadAbstract = (req, res) => {
       },
     })
       .then(() => {
-        const abstractUrl = `https"//firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${abstractFileName}?alt=media`;
+        const abstractUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${abstractFileName}?alt=media`;
         return db.doc(`/users/${req.user.email}`).update({ abstractUrl });
       })
       .then(() => res.json({ message: 'Abstract uploaded successfully' }))

@@ -8,10 +8,11 @@ exports.getAllWorkshops = (req, res) => {
     .then((data) => {
       const workshops = [];
       data.forEach((doc) => {
+        // dovoljno za sad, vidi sta treba posli
         workshops.push({
           workshopID: doc.id,
           title: doc.data().title,
-          department: doc.data().department,
+          // department: doc.data().department,
           createdAt: doc.data().createdAt,
         });
       });
@@ -23,10 +24,14 @@ exports.getAllWorkshops = (req, res) => {
 exports.postOneWorkshop = (req, res) => {
   const newWorkshop = {
     title: req.body.title,
-    department: req.body.department,
-    // email: req.user.email,
+    med: req.body.med,
+    pharm: req.body.pharm,
+    dent: req.body.dent,
+    yearsAndDepartments: req.body.yearsAndDepartments,
+    email: req.user.email,
     createdAt: new Date().toISOString(),
     applicationsCount: 0,
+    maxAttendees: req.body.maxAttendees,
     commentsCount: 0, // vj beskorisno
   };
 
@@ -80,7 +85,7 @@ exports.commentOnWorkshop = (req, res) => {
   db.doc(`/workshops/${req.params.workshopId}`).get()
     .then((doc) => {
       if (!doc.exists) { return res.status(404).json({ error: 'Workshop not found' }); }
-      return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
+      return doc.ref.update({ commentsCount: doc.data().commentsCount + 1 });
     })
     .then(() => db.collection('comments').add(newComment))
     .then(() => {
