@@ -80,8 +80,9 @@ exports.commentOnWorkshop = (req, res) => {
   db.doc(`/workshops/${req.params.workshopId}`).get()
     .then((doc) => {
       if (!doc.exists) { return res.status(404).json({ error: 'Workshop not found' }); }
-      return db.collection('comments').add(newComment);
+      return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
     })
+    .then(() => db.collection('comments').add(newComment))
     .then(() => {
       res.json(newComment);
     })
@@ -149,6 +150,25 @@ exports.unapplyToWorkshop = (req, res) => {
           return workshopDocument.update({ applicationsCount: workshopData.applicationsCount });
         })
         .then(() => res.json(workshopData));
+    })
+    .catch((err) => { res.status(500).json({ error: err.code }); });
+};
+
+exports.deleteWorkshop = (req, res) => {
+  const document = db.doc(`/workshops/${req.params.workshopId}`);
+  document.get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'Workshop not found' });
+      }
+      // Beskorisno, bilo koji admin bi treba moc brisat
+      if (doc.data().email !== req.user.email) {
+        return res.status(403).json({ error: 'Unauthorised' });
+      }
+      return document.delete();
+    })
+    .then(() => {
+      res.json({ message: 'Workshop deleted successfully' });
     })
     .catch((err) => { res.status(500).json({ error: err.code }); });
 };

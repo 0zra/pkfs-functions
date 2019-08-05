@@ -9,6 +9,7 @@ const {
   commentOnWorkshop,
   applyToWorkshop,
   unapplyToWorkshop,
+  deleteWorkshop,
 } = require('./handlers/workshops');
 const {
   signup,
@@ -22,12 +23,11 @@ const {
 app.get('/workshops', getAllWorkshops);
 app.post('/workshop', FBAuth, postOneWorkshop);
 app.get('/workshop/:workshopId', getWorkshop);
-// TODO: delete a workshop
-// TODO: apply for a workshop
+app.delete('/workshop/:workshopId', FBAuth, deleteWorkshop); // ?
 app.get('/workshop/:workshopId/apply', FBAuth, applyToWorkshop);
-app.get('/workshop/:workshopId/unapply', FBAuth, unapplyToWorkshop);
-// TODO: unapply for a workshop(?)
-app.post('/workshop/:workshopId/comment', FBAuth, commentOnWorkshop);
+app.get('/workshop/:workshopId/unapply', FBAuth, unapplyToWorkshop); // ?
+
+app.post('/workshop/:workshopId/comment', FBAuth, commentOnWorkshop); // ?
 
 // Users routes
 app.post('/signup', signup);
