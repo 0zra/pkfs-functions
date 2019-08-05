@@ -37,3 +37,23 @@ exports.postOneWorkshop = (req, res) => {
       console.log(err);
     });
 };
+
+exports.getWorkshop = (req, res) => {
+  let workshopData = {};
+  db.doc(`/workshops/${req.params.workshopId}`).get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'Workshop not found' });
+      }
+      workshopData = doc.data();
+      workshopData.workshopId = doc.id;
+      return db.collection('comments').where('workshopId', '==', req.params.workshopId).get();
+    })
+    .then((data) => {
+      workshopData.comments = [];
+      data.forEach((doc) => { workshopData.comments.push(doc.data()); });
+
+      return res.json(workshopData);
+    })
+    .catch((err) => { res.status(500).json({ error: err.code }); });
+};
