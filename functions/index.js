@@ -7,6 +7,8 @@ const {
   postOneWorkshop,
   getWorkshop,
   commentOnWorkshop,
+  applyToWorkshop,
+  unapplyToWorkshop,
 } = require('./handlers/workshops');
 const {
   signup,
@@ -22,6 +24,8 @@ app.post('/workshop', FBAuth, postOneWorkshop);
 app.get('/workshop/:workshopId', getWorkshop);
 // TODO: delete a workshop
 // TODO: apply for a workshop
+app.get('/workshop/:workshopId/apply', FBAuth, applyToWorkshop);
+app.get('/workshop/:workshopId/unapply', FBAuth, unapplyToWorkshop);
 // TODO: unapply for a workshop(?)
 app.post('/workshop/:workshopId/comment', FBAuth, commentOnWorkshop);
 
