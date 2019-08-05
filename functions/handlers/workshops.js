@@ -47,13 +47,37 @@ exports.getWorkshop = (req, res) => {
       }
       workshopData = doc.data();
       workshopData.workshopId = doc.id;
-      return db.collection('comments').where('workshopId', '==', req.params.workshopId).get();
+      return db.collection('comments')
+        .orderBy('createdAt', 'desc')
+        .where('workshopId', '==', req.params.workshopId).get();
     })
     .then((data) => {
       workshopData.comments = [];
       data.forEach((doc) => { workshopData.comments.push(doc.data()); });
 
       return res.json(workshopData);
+    })
+    .catch((err) => { res.status(500).json({ error: err.code }); });
+};
+
+exports.commentOnWorkshop = (req, res) => {
+  if (req.body.body.trim() === '') {
+    return res.status(400).json({ error: 'Must not be empty' });
+  }
+  const newComment = {
+    body: req.body.body,
+    createdAt: new Date().toISOString(),
+    workshopId: req.params.workshopId,
+    email: req.user.email,
+  };
+
+  db.doc(`/workshops/${req.params.workshopId}`).get()
+    .then((doc) => {
+      if (!doc.exists) { return res.status(404).json({ error: 'Workshop not found' }); }
+      return db.collection('comments').add(newComment);
+    })
+    .then(() => {
+      res.json(newComment);
     })
     .catch((err) => { res.status(500).json({ error: err.code }); });
 };

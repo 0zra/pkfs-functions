@@ -2,7 +2,12 @@ const functions = require('firebase-functions');
 const app = require('express')();
 const FBAuth = require('./utils/fbAuth');
 
-const { getAllWorkshops, postOneWorkshop, getWorkshop } = require('./handlers/workshops');
+const {
+  getAllWorkshops,
+  postOneWorkshop,
+  getWorkshop,
+  commentOnWorkshop,
+} = require('./handlers/workshops');
 const {
   signup,
   login,
@@ -18,7 +23,7 @@ app.get('/workshop/:workshopId', getWorkshop);
 // TODO: delete a workshop
 // TODO: apply for a workshop
 // TODO: unapply for a workshop(?)
-// TODO: comment on a workshop (vidit cemo za ovo)
+app.post('/workshop/:workshopId/comment', FBAuth, commentOnWorkshop);
 
 // Users routes
 app.post('/signup', signup);
