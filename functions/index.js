@@ -19,6 +19,8 @@ const {
   uploadAbstract,
   addUserDetails,
   getAuthenticatedUser,
+  getUserDetails,
+  markNotificationsRead,
 } = require('./handlers/users');
 
 // Workshop routes
@@ -37,6 +39,8 @@ app.post('/login', login);
 app.post('/user/abstract', FBAuth, uploadAbstract);
 app.post('/user', FBAuth, addUserDetails);
 app.get('/user', FBAuth, getAuthenticatedUser);
+app.get('/user/:email', getUserDetails);
+app.post('/notifications', FBAuth, markNotificationsRead);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
 

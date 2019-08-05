@@ -76,6 +76,36 @@ exports.login = (req, res) => {
     });
   return null;
 };
+// Get any user's details: i cemo ovako povezat applikacije, umisto workshopa
+exports.getUserDetails = (req, res) => {
+  const userData = {};
+  db.doc(`/users/${req.params.email}`).get()
+    .then((doc) => {
+      if (doc.exists) {
+        userData.user = doc.data();
+        return db.collection('workshops').where('email', '==', req.params.email)
+          .orderBy('createdAt', 'desc').get();
+      }
+      return res.status(404).json({ error: 'User not found' });
+    })
+    .then((data) => {
+      userData.workshops = [];
+      data.forEach((doc) => {
+        userData.workshops.push({
+          title: doc.data().title,
+          createdAt: doc.data().createdAt,
+          email: doc.data().email,
+          department: doc.data().department,
+          applicationsCount: doc.data().applicationsCount,
+          commentsCount: doc.data().commentsCount,
+          workshopId: doc.id,
+        });
+      });
+      return res.json(userData);
+    })
+    .catch(err => res.status(500).json({ error: err.code }));
+};
+
 // Get own user details
 exports.getAuthenticatedUser = (req, res) => {
   const userData = {};
@@ -157,4 +187,15 @@ exports.uploadAbstract = (req, res) => {
       .catch(err => res.status(500).json({ error: err.code }));
   });
   busboy.end(req.rawBody);
+};
+
+exports.markNotificationsRead = (req, res) => {
+  const batch = db.batch();
+  req.body.forEach((notificationId) => {
+    const notification = db.doc(`/notifications/${notificationId}`);
+    batch.update(notification, { read: true });
+  });
+  batch.commit()
+    .then(() => res.json({ message: 'Notification marked read' }))
+    .catch(err => res.status(500).json({ error: err.code }));
 };
