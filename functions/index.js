@@ -2,6 +2,8 @@ const functions = require('firebase-functions');
 const app = require('express')();
 const FBAuth = require('./utils/fbAuth');
 
+const { db } = require('./utils/admin');
+
 const {
   getAllWorkshops,
   postOneWorkshop,
@@ -37,3 +39,54 @@ app.post('/user', FBAuth, addUserDetails);
 app.get('/user', FBAuth, getAuthenticatedUser);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
+
+exports.createNotificationOnApply = functions.region('europe-west1').firestore.document('applications/{id}')
+  .onCreate((snapshot) => {
+    db.doc(`/workshops/${snapshot.data().workshopId}`).get()
+      .then((doc) => {
+        if (doc.exists) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().email,
+            sender: snapshot.data().email,
+            type: 'application',
+            read: false,
+            workshopId: doc.id,
+          });
+        }
+      })
+      .then(() => {})
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
+exports.deleteNotificationOnApply = functions.region('europe-west1').firestore.document('applications/{id}')
+  .onDelete((snapshot) => {
+    db.doc(`/notifications/${snapshot.data().workshopId}`).delete()
+      .then(() => {})
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
+exports.createNotificationOnComment = functions.region('europe-west1').firestore.document('comments/{id}')
+  .onCreate((snapshot) => {
+    db.doc(`/workshops/${snapshot.data().workshopId}`).get()
+      .then((doc) => {
+        if (doc.exists) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().email,
+            sender: snapshot.data().email,
+            type: 'comment',
+            read: false,
+            workshopId: doc.id,
+          });
+        }
+      })
+      .then(() => {})
+      .catch((err) => {
+        console.error(err);
+      });
+  });
