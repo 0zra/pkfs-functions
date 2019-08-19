@@ -12,6 +12,7 @@ exports.getAllWorkshops = (req, res) => {
         workshops.push({
           workshopID: doc.id,
           title: doc.data().title,
+          email: doc.data().email,
           // department: doc.data().department,
           createdAt: doc.data().createdAt,
         });
