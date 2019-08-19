@@ -41,7 +41,7 @@ exports.postOneWorkshop = (req, res) => {
     .add(newWorkshop)
     .then((doc) => {
       const resWorkshop = newWorkshop;
-      resWorkshop.workshopId = doc.id;
+      resWorkshop.workshopID = doc.id;
       res.json(resWorkshop);
     })
     .catch((err) => {
