@@ -23,6 +23,9 @@ exports.getAllWorkshops = (req, res) => {
 };
 
 exports.postOneWorkshop = (req, res) => {
+  if (req.body.title.trim() === '') {
+    return res.status(400).json({ title: 'Title must not be empty' });
+  }
   const newWorkshop = {
     title: req.body.title,
     med: req.body.med,
