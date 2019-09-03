@@ -57,7 +57,7 @@ exports.signup = (req, res) => {
       return db.doc(`/users/${newUser.email}`).set(userCredential);
     })
     .then(() => res.status(201).json({ token }))
-    .catch(err => res.status(500).json({ error: err.code }));
+    .catch(() => res.status(500).json({ error: 'Ovo je custom greska' }));
   return null;
 };
 
