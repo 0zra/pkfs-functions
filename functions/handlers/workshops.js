@@ -10,7 +10,7 @@ exports.getAllWorkshops = (req, res) => {
       data.forEach((doc) => {
         // dovoljno za sad, vidi sta treba posli
         workshops.push({
-          workshopID: doc.id,
+          workshopId: doc.id,
           title: doc.data().title,
           email: doc.data().email,
           // department: doc.data().department,
@@ -44,7 +44,7 @@ exports.postOneWorkshop = (req, res) => {
     .add(newWorkshop)
     .then((doc) => {
       const resWorkshop = newWorkshop;
-      resWorkshop.workshopID = doc.id;
+      resWorkshop.workshopId = doc.id;
       res.json(resWorkshop);
     })
     .catch((err) => {
